@@ -73,10 +73,17 @@ public:
 	float CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
 	//1秒に使うエネルギー
 	UPROPERTY(EditAnywhere)
-	float BoostConsumeRate = 10.0f;
+	float BoostConsumeRate = 20.0f;
 	//1秒で回復する量
 	UPROPERTY(EditAnywhere)
 	float BoostRecoverRate = 20.0f;
+
+	// --- Super Jump 用 ---
+	UPROPERTY(EditAnywhere, Category = "SuperJump")
+	float SuperJumpCostRatio = 0.5f;   // ゲージ50%
+
+	UPROPERTY(EditAnywhere, Category = "SuperJump")
+	float SuperJumpForce = 100000.0f;  // 上方向の力（調整用）
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UMyWidget> WidgetClass;
@@ -117,6 +124,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* BoostAction;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* SuperBoostAction;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float GroundCheckDistance = 50.0f; // 足元からのチェック距離
@@ -159,9 +169,6 @@ private:
 	UPROPERTY()
 	UNiagaraComponent* ActiveBoostEffect = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Boost")
-	float RemainingCooldown = 3.0f;
-
 	UPROPERTY(EditAnywhere, Category = "Boost|Sound")
 	USoundBase* BoostSound;
 
@@ -184,6 +191,9 @@ private:
 	UFUNCTION()
 	void BoostStop(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void SuperJump();
+
 	FVector RespawnPoint;
 	float StartBoostHeight = 0.0f; // Boost した時の高さ
 
@@ -205,11 +215,7 @@ private:
 	/** タイマー */
 	FTimerHandle BoostTimerHandle;
 	FTimerHandle BoostCooldownTimerHandle;
-	
 	FTimerHandle CooldownTickTimer;
-
-	/** Boost終了処理 */
-	//void EndBoost();
 
 	/** ゴール関連 */
 	bool bIsGoalReached = false;
@@ -233,7 +239,7 @@ private:
 	float Health = 100.0f;
 	float ForcePower = 150000.0f;
 	// 上昇スピード
-	float BoostRiseSpeed = 500.f; // 1秒間に30cm上がる
+	float BoostRiseSpeed = 400.f; // 1秒間に30cm上がる
 	/** 空中での操作の強さ（0.0〜1.0） */
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float AirControlFactor = 0.7f;

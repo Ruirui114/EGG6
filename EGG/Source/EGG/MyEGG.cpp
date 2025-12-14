@@ -85,6 +85,7 @@ AMyEgg::AMyEgg()
 	// Input Action「IA_Boost」を読み込む
 	BoostAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/Boost"));
 
+	SuperBoostAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/SuperBoost"));
 	// デフォルト値
 	bIsGoalReached = false;
 }
@@ -220,7 +221,7 @@ void AMyEgg::Tick(float DeltaTime)
 	}
 
 	//場外に出たとき用の処理
-	// 1000以上落ちたら着地リスポーン待機状態にする
+	// 400以上落ちたら着地リスポーン待機状態にする
 	if (FallDis >= 400.0f && !bIsGrounded)
 	{
 		//bShouldRespawnAfterLanding = true;
@@ -242,7 +243,7 @@ void AMyEgg::Tick(float DeltaTime)
 		GetWorldTimerManager().SetTimer(RespawnTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
 	}
 	//通常のゲームオーバーの処理
-	if ((LandingHeight - CurrentZ >= 400.0f) && !bIsGrounded)
+	if ((LandingHeight - CurrentZ >= 800.0f) && !bIsGrounded)
 	{
 		//UGameplayStatics::OpenLevel(GetWorld(), FName(*GetWorld()->GetName()));
 
@@ -306,13 +307,14 @@ void AMyEgg::Tick(float DeltaTime)
 		bShouldRotateInAir = false;
 	}
 }
+
 void AMyEgg::RespawnPlayer()
 {
 
 	if (!RespawnPoint.IsZero())
 	{
-		//LandingHeight = GetActorLocation().Z;
 		SetActorLocation(RespawnPoint);
+		LandingHeight = GetActorLocation().Z;
 	}
 	else
 	{
@@ -320,20 +322,17 @@ void AMyEgg::RespawnPlayer()
 		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
 		return;
 	}
-	// 一瞬だけ物理OFF
-	MeshComp->SetSimulatePhysics(false);
-	// 物理の吹っ飛び防止（速度リセット）
+
 	if (MeshComp)
 	{
+		// 速度だけリセット
 		MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
 		MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+		// 念のため下向き初速を与える（重要）
+		MeshComp->AddImpulse(FVector(0, 0, -50.0f), NAME_None, true);
 	}
-	// すぐに物理ON
-	FTimerHandle Timer;
-	GetWorld()->GetTimerManager().SetTimer(Timer, [this]()
-		{
-			MeshComp->SetSimulatePhysics(true);
-		}, 0.1f, false);
+
 	// --- UI を削除 ---
 	if (GameOverWidgetInstance)
 	{
@@ -355,7 +354,7 @@ void AMyEgg::RespawnPlayer()
 		// ポーズ解除（もし SetPause(true) を使っていたら）
 		PC->SetPause(false);
 	}
-	LandingHeight = GetActorLocation().Z;
+
 	// --- ステート・フラグのリセット ---
 	bIsGrounded = false;           // 必要に応じて初期化
 	bShouldRotateInAir = false;
@@ -400,6 +399,8 @@ void AMyEgg::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Started, this, &AMyEgg::BoostStart);
 
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Completed, this, &AMyEgg::BoostStop);
+
+		EnhancedInputComponent->BindAction(SuperBoostAction, ETriggerEvent::Started, this, &AMyEgg::SuperJump);
 	}
 }
 
@@ -531,5 +532,35 @@ void AMyEgg::BoostStop(const FInputActionValue& Value)
 	{
 		BoostAudioComponent->Stop();
 		//BoostAudioComponent->FadeOut(0.1f, 0.0f); // 急に切れないようにフェード
+	}
+}
+
+void AMyEgg::SuperJump()
+{
+	// 接地中のみ（空中連打防止）
+	if (!bIsGrounded)
+		return;
+
+	float Cost = MaxBoost * SuperJumpCostRatio;
+
+	// ゲージ不足
+	if (CurrentBoost < Cost)
+		return;
+
+	// ゲージ消費
+	CurrentBoost -= Cost;
+	CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
+
+	// 上方向に強い力を加える
+	FVector JumpForce = FVector(0.0f, 0.0f, SuperJumpForce);
+	MeshComp->AddImpulse(JumpForce);
+
+	// 接地フラグを即解除
+	bIsGrounded = false;
+
+	// UI更新
+	if (MyWidgetInstance)
+	{
+		MyWidgetInstance->UpdateBoostBar(CurrentBoost, MaxBoost);
 	}
 }
