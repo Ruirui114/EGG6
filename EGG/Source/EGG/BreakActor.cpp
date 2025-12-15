@@ -12,7 +12,7 @@ ABreakActor::ABreakActor()
     // 当たり判定ボックス
     BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
     RootComponent = BoxComponent;
-    BoxComponent->SetBoxExtent(FVector(50.f, 50.f, 5.f));
+    BoxComponent->SetBoxExtent(FVector(68.f, 68.f, 5.f));
     BoxComponent->SetCollisionProfileName(TEXT("Trigger"));
 
     //メッシュを作ってボックスの上に置く
@@ -53,7 +53,7 @@ void ABreakActor::BreakPlatform()
 
     bIsBroken = true;
 
-    // ✅ 非表示・当たり判定OFFにする
+    //非表示・当たり判定OFFにする
     MeshComponent->SetVisibility(false);
     MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     BoxComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -64,7 +64,7 @@ void ABreakActor::BreakPlatform()
 
 void ABreakActor::RespawnPlatform()
 {
-    // ✅ 表示・当たり判定ONに戻す
+    // 表示・当たり判定ONに戻す
     MeshComponent->SetVisibility(true);
     MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
