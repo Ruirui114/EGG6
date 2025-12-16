@@ -409,6 +409,16 @@ void AMyEgg::OnGoalReached()
 	if (bIsGoalReached) return; // 二重判定防止
 	bIsGoalReached = true;
 
+	//ClearUIを表示
+	if (ClearWidgetClass && ClearWidgetInstance == nullptr)
+	{
+		ClearWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ClearWidgetClass);
+		if (ClearWidgetInstance)
+		{
+			ClearWidgetInstance->AddToViewport();
+		}
+	}
+
 	//動きを止める
 	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);

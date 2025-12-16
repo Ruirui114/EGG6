@@ -36,7 +36,13 @@ void AGoalActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 			if (ClearWidget)
 			{
 				ClearWidget->AddToViewport();
+				if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+				{
+					PC->SetInputMode(FInputModeUIOnly());
+					PC->bShowMouseCursor = true;
+				}
 			}
+		
 		}
 	}
 }

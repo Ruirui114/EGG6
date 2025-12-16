@@ -4,6 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "BreakActor.generated.h"
 
+
+class UBoxComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class EGG_API ABreakActor : public AActor
 {

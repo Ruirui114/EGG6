@@ -1,6 +1,7 @@
 ﻿#include "BreakActor.h"
-#include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "MyEGG.h"
@@ -9,20 +10,22 @@ ABreakActor::ABreakActor()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // 当たり判定ボックス
-    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-    RootComponent = BoxComponent;
-    BoxComponent->SetBoxExtent(FVector(68.f, 68.f, 5.f));
-    BoxComponent->SetCollisionProfileName(TEXT("Trigger"));
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    //メッシュを作ってボックスの上に置く
+    // BOX 当たり判定
+    BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+    BoxComponent->SetupAttachment(RootComponent);
+    BoxComponent->SetBoxExtent(FVector(30.f, 30.f, 5.f));
+    BoxComponent->SetCollisionProfileName(TEXT("Trigger"));
+    BoxComponent->SetGenerateOverlapEvents(true);
+
+    // メッシュ（表示用）
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-    MeshComponent->SetupAttachment(BoxComponent);
+    MeshComponent->SetupAttachment(RootComponent);
     MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     MeshComponent->SetGenerateOverlapEvents(false);
-
-    // オーバーラップ検出有効
-    BoxComponent->SetGenerateOverlapEvents(true);
+    MeshComponent->SetVisibility(true);
+    MeshComponent->SetHiddenInGame(false);
 }
 
 void ABreakActor::BeginPlay()

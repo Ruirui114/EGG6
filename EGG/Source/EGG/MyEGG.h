@@ -64,6 +64,8 @@ public:
 	UPROPERTY()
 	UUserWidget* GameOverWidgetInstance = nullptr;
 
+	UPROPERTY()
+	UUserWidget* ClearWidgetInstance = nullptr;
 
 	// Boost量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -139,6 +141,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> BoostGaugeWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "ClearUI")
+	TSubclassOf<UUserWidget> ClearWidgetClass;
 
 	UPROPERTY()
 	UMyWidget* MyWidgetInstance;
