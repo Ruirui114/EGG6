@@ -18,6 +18,8 @@ void AGoalActor::BeginPlay()
 {
 	Super::BeginPlay();
 	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AGoalActor::OnOverlapBegin);
+
+
 }
 
 void AGoalActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

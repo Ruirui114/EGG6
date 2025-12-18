@@ -408,13 +408,14 @@ void AMyEgg::OnGoalReached()
 {
 	if (bIsGoalReached) return; // 二重判定防止
 	bIsGoalReached = true;
-
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	//ClearUIを表示
 	if (ClearWidgetClass && ClearWidgetInstance == nullptr)
 	{
 		ClearWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ClearWidgetClass);
 		if (ClearWidgetInstance)
 		{
+			PC->bShowMouseCursor = true;
 			ClearWidgetInstance->AddToViewport();
 		}
 	}
