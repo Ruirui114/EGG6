@@ -14,4 +14,8 @@ UCLASS()
 class EGG_API AMyGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void BeginPlay() override;
+
 };

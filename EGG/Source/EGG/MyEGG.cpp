@@ -86,6 +86,8 @@ AMyEgg::AMyEgg()
 	BoostAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/Boost"));
 
 	SuperBoostAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/SuperBoost"));
+
+	TabAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/Tab"));
 	// デフォルト値
 	bIsGoalReached = false;
 }
@@ -157,6 +159,7 @@ void AMyEgg::BeginPlay()
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
 	if (PC)
 	{
+		EnableInput(PC);
 		if (ULocalPlayer* LP = PC->GetLocalPlayer())
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
@@ -401,6 +404,8 @@ void AMyEgg::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Completed, this, &AMyEgg::BoostStop);
 
 		EnhancedInputComponent->BindAction(SuperBoostAction, ETriggerEvent::Started, this, &AMyEgg::SuperJump);
+
+		EnhancedInputComponent->BindAction(TabAction, ETriggerEvent::Started, this, &AMyEgg::Tab);
 	}
 }
 
@@ -574,4 +579,61 @@ void AMyEgg::SuperJump()
 	{
 		MyWidgetInstance->UpdateBoostBar(CurrentBoost, MaxBoost);
 	}
+}
+
+void AMyEgg::Tab()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC || !MenuWidgetClass) return;
+
+	MenuWidgetInstance = CreateWidget<UUserWidget>(PC, MenuWidgetClass);
+	if (MenuWidgetInstance)
+	{
+		MenuWidgetInstance->AddToViewport();
+
+		MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+		MeshComp->SetSimulatePhysics(false);
+
+		PC->SetInputMode(FInputModeUIOnly());
+		PC->bShowMouseCursor = true;
+		UGameplayStatics::SetGamePaused(GetWorld(), true);
+	}
+	//// UI生成
+	//if (MenuWidgetClass && MenuWidgetInstance == nullptr)
+	//{
+	//	MenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), MenuWidgetClass);
+	//	if (MenuWidgetInstance)
+	//	{
+	//		MenuWidgetInstance->AddToViewport();
+	//	}
+	//}
+	
+	//// プレイヤー停止
+	//MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	//MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+	//MeshComp->SetSimulatePhysics(false);
+
+	//// 入力をUIのみに
+	//FInputModeUIOnly InputMode;
+	//InputMode.SetWidgetToFocus(MenuWidgetInstance->TakeWidget());
+	//PC->SetInputMode(InputMode);
+	//PC->bShowMouseCursor = true;
+
+	// ゲーム停止（完全フリーズ）
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+}
+void AMyEgg::SetMenuOpen(bool bOpen)
+{
+	bIsMenuOpen = bOpen;
+}
+void AMyEgg::ResumeFromMenu()
+{
+	// 物理再開
+	MeshComp->SetSimulatePhysics(true);
+
+	// 念のため速度ゼロ
+	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 }

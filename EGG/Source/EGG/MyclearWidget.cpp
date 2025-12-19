@@ -19,5 +19,5 @@ void  UMyclearWidget::NativeConstruct()
 void UMyclearWidget::OnTitleClicked()
 {
     // ゲーム開始（例：MainMap をロード）
-    UGameplayStatics::OpenLevel(GetWorld(), TEXT("Title"));
+    UGameplayStatics::OpenLevel(GetWorld(), TEXT("GameTitle"));
 }

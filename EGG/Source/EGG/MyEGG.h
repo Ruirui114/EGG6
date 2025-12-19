@@ -57,6 +57,9 @@ public:
 
 	void SetCheckpoint(const FVector& NewLocation);
 
+	void ResumeFromMenu();
+
+	void SetMenuOpen(bool bOpen);
 	// リスポーン待機時間（秒）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
 	float RespawnDelay = 2.0f;
@@ -66,6 +69,9 @@ public:
 
 	UPROPERTY()
 	UUserWidget* ClearWidgetInstance = nullptr;
+
+	UPROPERTY()
+	UUserWidget* MenuWidgetInstance = nullptr;
 
 	// Boost量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -130,6 +136,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* SuperBoostAction;
 
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* TabAction;
+
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float GroundCheckDistance = 50.0f; // 足元からのチェック距離
 
@@ -144,6 +153,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "ClearUI")
 	TSubclassOf<UUserWidget> ClearWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "MenuUI")
+	TSubclassOf<UUserWidget> MenuWidgetClass;
+
+	bool bIsMenuOpen = false;
 
 	UPROPERTY()
 	UMyWidget* MyWidgetInstance;
@@ -198,6 +212,9 @@ private:
 
 	UFUNCTION()
 	void SuperJump();
+
+	UFUNCTION()
+	void Tab();
 
 	FVector RespawnPoint;
 	float StartBoostHeight = 0.0f; // Boost した時の高さ
