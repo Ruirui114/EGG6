@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "MyGameInstance.h"
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "MyMenuWidget.generated.h"
 
 class UButton;
-
+class UProgressBar;
 UCLASS()
 class EGG_API UMyMenuWidget : public UUserWidget
 {
@@ -16,6 +16,9 @@ class EGG_API UMyMenuWidget : public UUserWidget
 public:
     virtual void NativeConstruct() override;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bar");
+
+    UProgressBar* Slider;
 protected:
     UPROPERTY(meta = (BindWidget))
     UButton* TitleButton;
@@ -34,4 +37,6 @@ private:
 
     UFUNCTION()
     void OnResumeClicked();
+
+    UMyGameInstance* GameInstance;
 };

@@ -6,10 +6,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "MyEGG.h"
+#include "Components/ProgressBar.h"
 
 void  UMyMenuWidget::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    Slider->SetPercent(GameInstance->Sound);
 
     if (TitleButton)
     {
