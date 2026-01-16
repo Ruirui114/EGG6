@@ -17,6 +17,6 @@ public:
 
 	virtual void Init() override;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sound")
-	float Sound;
+	float Sound = 0.5f;
 
 };

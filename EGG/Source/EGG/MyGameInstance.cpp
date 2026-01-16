@@ -7,5 +7,4 @@ void UMyGameInstance::Init()
 {
 	Super::Init();
 
-	Sound = 1;
 }

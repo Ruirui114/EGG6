@@ -78,7 +78,8 @@ public:
 	float MaxBoost = 100.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	float CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
+	float CurrentBoost = MaxBoost;
+		//FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
 	//1秒に使うエネルギー
 	UPROPERTY(EditAnywhere)
 	float BoostConsumeRate = 20.0f;

@@ -7,7 +7,7 @@
 #include "MyMenuWidget.generated.h"
 
 class UButton;
-class UProgressBar;
+class USlider;
 UCLASS()
 class EGG_API UMyMenuWidget : public UUserWidget
 {
@@ -16,9 +16,9 @@ class EGG_API UMyMenuWidget : public UUserWidget
 public:
     virtual void NativeConstruct() override;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bar");
+    //UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bar");
+    //USlider* Slider;
 
-    UProgressBar* Slider;
 protected:
     UPROPERTY(meta = (BindWidget))
     UButton* TitleButton;
@@ -28,6 +28,12 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UButton* ResumeButton;
+
+    UPROPERTY(meta = (BindWidget))
+    USlider* VolumeSlider;
+
+    UFUNCTION()
+    void OnSliderValueChanged(float Value);
 private:
     UFUNCTION()
     void OnTitleClicked();

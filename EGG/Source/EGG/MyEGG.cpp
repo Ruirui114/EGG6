@@ -313,6 +313,7 @@ void AMyEgg::Tick(float DeltaTime)
 
 void AMyEgg::RespawnPlayer()
 {
+	CurrentBoost = MaxBoost;
 
 	if (!RespawnPoint.IsZero())
 	{

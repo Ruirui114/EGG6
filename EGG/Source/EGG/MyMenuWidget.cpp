@@ -3,16 +3,29 @@
 
 #include "MyMenuWidget.h"
 #include "Components/Button.h"
+#include "Components/Slider.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "MyEGG.h"
-#include "Components/ProgressBar.h"
 
 void  UMyMenuWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    Slider->SetPercent(GameInstance->Sound);
+    if (VolumeSlider)
+    {
+        // Sliderイベント登録
+        VolumeSlider->OnValueChanged.AddDynamic(
+            this,
+            &UMyMenuWidget::OnSliderValueChanged
+        );
+
+        // GameInstanceから値を取得して代入
+        if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetGameInstance()))
+        {
+            VolumeSlider->SetValue(GI->Sound);
+        }
+    }
 
     if (TitleButton)
     {
@@ -29,6 +42,14 @@ void  UMyMenuWidget::NativeConstruct()
     if (ResumeButton)
     {
         ResumeButton->OnClicked.AddDynamic(this, &UMyMenuWidget::OnResumeClicked);
+    }
+}
+
+void UMyMenuWidget::OnSliderValueChanged(float Value)
+{
+    if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetGameInstance()))
+    {
+        GI->Sound = Value;
     }
 }
 
@@ -85,3 +106,4 @@ void UMyMenuWidget::OnResumeClicked()
     // このメニューを消す
     RemoveFromParent();
 }
+
