@@ -600,26 +600,6 @@ void AMyEgg::Tab()
 		PC->bShowMouseCursor = true;
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
-	//// UI生成
-	//if (MenuWidgetClass && MenuWidgetInstance == nullptr)
-	//{
-	//	MenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), MenuWidgetClass);
-	//	if (MenuWidgetInstance)
-	//	{
-	//		MenuWidgetInstance->AddToViewport();
-	//	}
-	//}
-	
-	//// プレイヤー停止
-	//MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
-	//MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
-	//MeshComp->SetSimulatePhysics(false);
-
-	//// 入力をUIのみに
-	//FInputModeUIOnly InputMode;
-	//InputMode.SetWidgetToFocus(MenuWidgetInstance->TakeWidget());
-	//PC->SetInputMode(InputMode);
-	//PC->bShowMouseCursor = true;
 
 	// ゲーム停止（完全フリーズ）
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
@@ -637,4 +617,17 @@ void AMyEgg::ResumeFromMenu()
 	// 念のため速度ゼロ
 	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+}
+
+void AMyEgg::AddEggCount()
+{
+	EggCount++;
+
+	UE_LOG(LogTemp, Warning, TEXT("Egg: %d / %d"), EggCount, MaxEggCount);
+
+	// UI更新
+	if (MyWidgetInstance)
+	{
+		MyWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
+	}
 }

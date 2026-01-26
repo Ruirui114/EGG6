@@ -23,7 +23,7 @@ void  UMyUserWidget::NativeConstruct()
 void UMyUserWidget::OnStartClicked()
 {
     // ゲーム開始（例：MainMap をロード）
-    UGameplayStatics::OpenLevel(GetWorld(), TEXT("NewMap"));
+    UGameplayStatics::OpenLevel(GetWorld(), TEXT("ENDMap"));
 }
 
 

@@ -60,6 +60,8 @@ public:
 	void ResumeFromMenu();
 
 	void SetMenuOpen(bool bOpen);
+
+	void AddEggCount();
 	// リスポーン待機時間（秒）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
 	float RespawnDelay = 2.0f;
@@ -200,6 +202,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Fall")
 	float FallDistance = 1000.0f;   // 300落ちたらリスタート
+
+	UPROPERTY(VisibleAnywhere, Category = "Egg")
+	int32 EggCount = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Egg")
+	int32 MaxEggCount = 3;
 
 	// リスポーン処理
 	UFUNCTION()

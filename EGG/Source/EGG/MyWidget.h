@@ -7,6 +7,10 @@
 #include "MyWidget.generated.h"
 
 class UProgressBar;
+class UTextBlock;
+/**
+ * 
+ */
 UCLASS()
 class EGG_API UMyWidget : public UUserWidget
 {
@@ -15,10 +19,17 @@ class EGG_API UMyWidget : public UUserWidget
 public:
 	// Boostゲージ更新用
 	void UpdateBoostBar(float Current, float Max);
+	// 卵カウント更新用
+	UFUNCTION(BlueprintCallable)
+	void UpdateEggCount(float Current, float Max);
 
 protected:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* BoostBar;
+
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* EggText;
 };
