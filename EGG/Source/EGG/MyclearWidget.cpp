@@ -16,6 +16,7 @@ void  UMyclearWidget::NativeConstruct()
     }
 }
 
+
 void UMyclearWidget::OnTitleClicked()
 {
     // ゲーム開始（例：MainMap をロード）

@@ -10,6 +10,8 @@
 #include "Engine/StaticMesh.h"
 #include "Blueprint/UserWidget.h"
 #include "MyWidget.h"
+#include "ScoreWidget.h"
+#include "DoragonActor.h"
 #include "MyGameModeBase.h"
 #include "Components/TextBlock.h"
 #include "NiagaraFunctionLibrary.h"
@@ -49,9 +51,6 @@ AMyEgg::AMyEgg()
 
 	// 移動コンポーネント追加（物理ではなくコード制御）
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-
-
-
 
 	// SpringArmを追加する
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
@@ -154,6 +153,17 @@ void AMyEgg::BeginPlay()
 	if (MeshComp && PhysicsMaterial)
 	{
 		MeshComp->SetPhysMaterialOverride(PhysicsMaterial);
+	}
+
+
+	if (ScoreWidgetClass)
+	{
+		ScoreWidgetInstance = CreateWidget<UScoreWidget>(GetWorld(), ScoreWidgetClass);
+		if (ScoreWidgetInstance)
+		{
+			ScoreWidgetInstance->AddToViewport();
+			ScoreWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
+		}
 	}
 
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
@@ -426,6 +436,10 @@ void AMyEgg::OnGoalReached()
 		}
 	}
 
+	if (DoragonActor)
+	{
+		DoragonActor->SetRewardByScore(EggCount);
+	}
 	//動きを止める
 	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
@@ -605,10 +619,7 @@ void AMyEgg::Tab()
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
 
 }
-void AMyEgg::SetMenuOpen(bool bOpen)
-{
-	bIsMenuOpen = bOpen;
-}
+
 void AMyEgg::ResumeFromMenu()
 {
 	// 物理再開
@@ -626,8 +637,8 @@ void AMyEgg::AddEggCount()
 	UE_LOG(LogTemp, Warning, TEXT("Egg: %d / %d"), EggCount, MaxEggCount);
 
 	// UI更新
-	if (MyWidgetInstance)
+	if (ScoreWidgetInstance)
 	{
-		MyWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
+		ScoreWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
 	}
 }

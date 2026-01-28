@@ -26,7 +26,7 @@ class UUserWidget;
 class UTextBlock;
 class UProgressBar;
 class UMyWidget;
-
+class ADoragonActor;
 
 UCLASS()
 class EGG_API AMyEgg : public APawn
@@ -59,8 +59,6 @@ public:
 
 	void ResumeFromMenu();
 
-	void SetMenuOpen(bool bOpen);
-
 	void AddEggCount();
 	// リスポーン待機時間（秒）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
@@ -75,6 +73,8 @@ public:
 	UPROPERTY()
 	UUserWidget* MenuWidgetInstance = nullptr;
 
+	UPROPERTY()
+	class UScoreWidget* ScoreWidgetInstance;
 	// Boost量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxBoost = 100.0f;
@@ -103,6 +103,9 @@ public:
 	TSubclassOf<UMyWidget> BoostWidgetClass;
 
 	UMyWidget* BoostWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Clear")
+	ADoragonActor* DoragonActor;
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComp;
@@ -160,7 +163,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "MenuUI")
 	TSubclassOf<UUserWidget> MenuWidgetClass;
 
-	bool bIsMenuOpen = false;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> ScoreWidgetClass;
+
+	
 
 	UPROPERTY()
 	UMyWidget* MyWidgetInstance;

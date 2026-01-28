@@ -97,7 +97,6 @@ void UMyMenuWidget::OnResumeClicked()
         {
             if (AMyEgg* Egg = Cast<AMyEgg>(Pawn))
             {
-                Egg->SetMenuOpen(false);
                 Egg->ResumeFromMenu();
             }
         }

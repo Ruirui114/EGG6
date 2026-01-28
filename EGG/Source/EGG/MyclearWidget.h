@@ -8,6 +8,7 @@
 
 class UButton;
 
+
 UCLASS()
 class EGG_API UMyclearWidget : public UUserWidget
 {
@@ -19,6 +20,7 @@ public:
 protected:
     UPROPERTY(meta = (BindWidget))
     UButton* TitleButton;
+
 private:
     UFUNCTION()
     void OnTitleClicked();
