@@ -21,6 +21,7 @@ public:
 	ADoragonActor();
 	void SetRewardByScore(int32 Score);
 
+	void BeginPlay() override;
 protected:
 	UPROPERTY(EditAnywhere)
 	USkeletalMeshComponent* Reward1;

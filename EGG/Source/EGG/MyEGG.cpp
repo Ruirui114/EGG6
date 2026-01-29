@@ -11,6 +11,8 @@
 #include "Blueprint/UserWidget.h"
 #include "MyWidget.h"
 #include "ScoreWidget.h"
+#include "MyGameInstance.h"
+#include "EngineUtils.h"
 #include "DoragonActor.h"
 #include "MyGameModeBase.h"
 #include "Components/TextBlock.h"
@@ -44,10 +46,8 @@ AMyEgg::AMyEgg()
 		MeshComp->SetStaticMesh(MeshAsset.Object);
 	}
 
-
 	// 衝突設定
 	MeshComp->SetCollisionProfileName(TEXT("Pawn"));
-
 
 	// 移動コンポーネント追加（物理ではなくコード制御）
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -155,14 +155,13 @@ void AMyEgg::BeginPlay()
 		MeshComp->SetPhysMaterialOverride(PhysicsMaterial);
 	}
 
-
-	if (ScoreWidgetClass)
+	if (!ScoreWidget && ScoreWidgetClass)
 	{
-		ScoreWidgetInstance = CreateWidget<UScoreWidget>(GetWorld(), ScoreWidgetClass);
-		if (ScoreWidgetInstance)
+		ScoreWidget = CreateWidget<UScoreWidget>(GetWorld(), ScoreWidgetClass);
+		if (ScoreWidget)
 		{
-			ScoreWidgetInstance->AddToViewport();
-			ScoreWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
+			ScoreWidget->AddToViewport();
+			ScoreWidget->UpdateEggCount(); // 初期表示
 		}
 	}
 
@@ -425,6 +424,7 @@ void AMyEgg::OnGoalReached()
 	if (bIsGoalReached) return; // 二重判定防止
 	bIsGoalReached = true;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+
 	//ClearUIを表示
 	if (ClearWidgetClass && ClearWidgetInstance == nullptr)
 	{
@@ -435,15 +435,17 @@ void AMyEgg::OnGoalReached()
 			ClearWidgetInstance->AddToViewport();
 		}
 	}
-
-	if (DoragonActor)
+	if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetWorld()->GetGameInstance()))
 	{
-		DoragonActor->SetRewardByScore(EggCount);
+		for (TActorIterator<ADoragonActor> It(GetWorld()); It; ++It)
+		{
+			It->SetRewardByScore(GI->EggScore);
+		}
 	}
 	//動きを止める
 	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
-
+	
 	MeshComp->SetSimulatePhysics(false); // ← 完全停止！
 }
 
@@ -632,13 +634,13 @@ void AMyEgg::ResumeFromMenu()
 
 void AMyEgg::AddEggCount()
 {
-	EggCount++;
-
-	UE_LOG(LogTemp, Warning, TEXT("Egg: %d / %d"), EggCount, MaxEggCount);
-
-	// UI更新
-	if (ScoreWidgetInstance)
+	if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetWorld()->GetGameInstance()))
 	{
-		ScoreWidgetInstance->UpdateEggCount(EggCount, MaxEggCount);
+		GI->EggScore++; // スコア更新
+	}
+
+	if (ScoreWidget)
+	{
+		ScoreWidget->UpdateEggCount(); // 表示更新
 	}
 }

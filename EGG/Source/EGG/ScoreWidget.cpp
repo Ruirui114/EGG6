@@ -3,26 +3,24 @@
 
 #include "ScoreWidget.h"
 #include "Components/TextBlock.h"
-
+#include "MyGameInstance.h"
 void UScoreWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	UE_LOG(LogTemp, Warning, TEXT("ScoreWidget NativeConstruct"));
+
+	UpdateEggCount();
 }
 
-
-
-void UScoreWidget::UpdateEggCount(float Current, float Max)
+int UScoreWidget::UpdateEggCount()
 {
-	//if (!EggText)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("UpdateEggCount: %p"), this);
-	//	return;
-	//}
-	if (!EggText) return;
+	//if (!EggText) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("UpdateEggCount: %p"), this);
-	UE_LOG(LogTemp, Warning, TEXT("UpdateEggCount: %f"), Current);
-	FString Text = FString::Printf(TEXT("%.0f / %.0f"), Current, Max);
-	EggText->SetText(FText::FromString(Text));
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateEggCount: %p"), this);
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateEggCount: %d"), Current);
+	if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetWorld()->GetGameInstance()))
+	{
+		FString Text = FString::Printf(TEXT("%d / 3"), GI->EggScore);
+		EggText->SetText(FText::AsNumber(GI->EggScore));
+	}
+	return 0;
 }

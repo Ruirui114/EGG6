@@ -9,7 +9,7 @@
 /**
  * 
  */
-class UMyWidget;
+class UScoreWidget;
 UCLASS()
 class EGG_API AMyGameModeBase : public AGameModeBase
 {
@@ -18,4 +18,9 @@ class EGG_API AMyGameModeBase : public AGameModeBase
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UScoreWidget> ScoreWidgetClass;
+
+	UPROPERTY()
+	UScoreWidget* ScoreWidgetInstance;
 };

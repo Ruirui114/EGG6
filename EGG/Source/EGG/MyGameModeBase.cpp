@@ -3,12 +3,23 @@
 #include "MyGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "MyWidget.h"
+#include "ScoreWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 
 void AMyGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (ScoreWidgetClass)
+    {
+        ScoreWidgetInstance = CreateWidget<UScoreWidget>(GetWorld(), ScoreWidgetClass);
+        if (ScoreWidgetInstance)
+        {
+            ScoreWidgetInstance->AddToViewport();
+            ScoreWidgetInstance->UpdateEggCount();
+        }
+    }
 
     APlayerController* PC = GetWorld()->GetFirstPlayerController();
     if (!PC) return;

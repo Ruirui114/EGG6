@@ -7,7 +7,7 @@
 #include "MyEndWidget.generated.h"
 
 class UButton;
-
+class UTextBlock;
 UCLASS()
 class EGG_API UMyEndWidget : public UUserWidget
 {
@@ -19,6 +19,7 @@ public:
 protected:
     UPROPERTY(meta = (BindWidget))
     UButton* EndButton;
+
 private:
     UFUNCTION()
     void OnEndClicked();

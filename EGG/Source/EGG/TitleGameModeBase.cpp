@@ -4,7 +4,7 @@
 #include "TitleGameModeBase.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
-
+#include "MyGameInstance.h"
 void ATitleGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
@@ -12,10 +12,15 @@ void ATitleGameModeBase::BeginPlay()
     // Widgetê∂ê¨
     if (TitleWidgetClass)
     {
+
         TitleWidget = CreateWidget<UUserWidget>(GetWorld(), TitleWidgetClass);
         if (TitleWidget)
         {
             TitleWidget->AddToViewport();
+        }
+        if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetGameInstance()))
+        {
+            GI->ResetEggScore();
         }
     }
 

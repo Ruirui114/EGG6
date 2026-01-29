@@ -16,7 +16,25 @@ class EGG_API UMyGameInstance : public UGameInstance
 public:
 
 	virtual void Init() override;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Sound")
 	float Sound = 0.5f;
 
+	// 卵のスコア
+	UPROPERTY(BlueprintReadWrite)
+	int32 EggScore = 0;
+
+	// スコア加算
+	UFUNCTION(BlueprintCallable)
+	void AddEggScore()
+	{
+		EggScore = 0;
+	}
+
+	// リセット（新規ゲーム用）
+	UFUNCTION(BlueprintCallable)
+	void ResetEggScore()
+	{
+		EggScore = 0;
+	}
 };

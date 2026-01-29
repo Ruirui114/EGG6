@@ -74,7 +74,8 @@ public:
 	UUserWidget* MenuWidgetInstance = nullptr;
 
 	UPROPERTY()
-	class UScoreWidget* ScoreWidgetInstance;
+	class UScoreWidget* ScoreWidget;
+
 	// Boost量
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxBoost = 100.0f;

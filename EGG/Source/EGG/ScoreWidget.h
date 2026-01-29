@@ -19,7 +19,7 @@ public:
 	void UpdateBoostBar(float Current, float Max);
 	// 卵カウント更新用
 	UFUNCTION(BlueprintCallable)
-	void UpdateEggCount(float Current, float Max);
+	int UpdateEggCount();
 
 protected:
 	virtual void NativeConstruct() override;

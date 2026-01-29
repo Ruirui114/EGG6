@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "MyEGG.h"
+#include "MyGameInstance.h"
 
 void  UMyMenuWidget::NativeConstruct()
 {
@@ -73,6 +74,9 @@ void UMyMenuWidget::OnRestartClicked()
         PC->SetInputMode(InputMode);
         PC->bShowMouseCursor = false;
 
+        UMyGameInstance* GI = Cast<UMyGameInstance>(GetGameInstance());
+        GI->ResetEggScore();
+
         // “ü—ÍÄ—LŒø‰»i”O‚Ì‚½‚ßj
         PC->EnableInput(PC);
     }
@@ -98,6 +102,7 @@ void UMyMenuWidget::OnResumeClicked()
             if (AMyEgg* Egg = Cast<AMyEgg>(Pawn))
             {
                 Egg->ResumeFromMenu();
+
             }
         }
     }
