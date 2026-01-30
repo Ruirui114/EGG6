@@ -180,25 +180,77 @@ void AMyEgg::BeginPlay()
 			}
 		}
 	}
-
-
 }
 
 // Tick関数で位置だけを同期（回転は無視）
 void AMyEgg::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	if (bIsGoalReached) return; // ← ゴール後は物理処理をスキップ
 	float CurrentZ = GetActorLocation().Z;
+	
+	FVector Start = MeshComp->GetComponentLocation();
+	FVector End = Start - FVector(0.0f, 0.0f, GroundCheckDistance);
 
-	// 空中にいるかどうかの判定
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+
+	bIsGrounded = bHit;
+
 	if (!bIsGrounded && !bIsFalling)
 	{
+		// 空中に出た瞬間
 		bIsFalling = true;
 		FallStartZ = GetActorLocation().Z;
 	}
-	
+
+	if (bIsGrounded && bIsFalling)
+	{
+		// 着地
+		bIsFalling = false;
+	}
+
+	if (bIsFalling && !bIsGrounded && !bIsGameOver)
+	{
+		CurrentZ = FallStartZ - GetActorLocation().Z;
+
+		if (CurrentZ >= 800.0f)
+		{
+			bIsGameOver = true;
+
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				DisableInput(PC);
+			}
+
+			if (GameOverWidgetClass && !GameOverWidgetInstance)
+			{
+				GameOverWidgetInstance =
+					CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
+				GameOverWidgetInstance->AddToViewport();
+			}
+			FTimerHandle RestartTimer;
+			GetWorldTimerManager().SetTimer(
+				RestartTimer,
+				this,
+				&AMyEgg::RespawnPlayer,
+				RespawnDelay,
+				false
+			);
+		}
+	}
+
+	// Boost ゲージ管理
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
 	{
@@ -218,6 +270,8 @@ void AMyEgg::Tick(float DeltaTime)
 			CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
 		}
 
+		CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
+		// Boost 終了判定
 		if (bIsBoosting && CurrentBoost <= 0.0f)
 		{
 			LandingHeight = GetActorLocation().Z;
@@ -231,7 +285,7 @@ void AMyEgg::Tick(float DeltaTime)
 			}
 		}
 	}
-	CurrentBoost = FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
+
 
 	// UI 更新
 	if (BoostBar)
@@ -239,28 +293,6 @@ void AMyEgg::Tick(float DeltaTime)
 		BoostBar->SetPercent(CurrentBoost / MaxBoost);
 	}
 
-	//場外に出たとき用の処理
-	// 400以上落ちたら着地リスポーン待機状態にする
-	if (FallDis >= 400.0f && !bIsGrounded)
-	{
-		//bShouldRespawnAfterLanding = true;
-
-		//GameOverUIを表示
-		if (GameOverWidgetClass && GameOverWidgetInstance == nullptr)
-		{
-			GameOverWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
-			if (GameOverWidgetInstance)
-			{
-				GameOverWidgetInstance->AddToViewport();
-			}
-		}
-		// 入力を無効化
-		DisableInput(PC);
-
-		//  レベルリスタート
-		FTimerHandle RespawnTimer;
-		GetWorldTimerManager().SetTimer(RespawnTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
-	}
 	//通常のゲームオーバーの処理
 	//if ((LandingHeight - CurrentZ >= 800.0f) && !bIsGrounded)
 	//{
@@ -280,18 +312,7 @@ void AMyEgg::Tick(float DeltaTime)
 	//	//  レベルリスタート
 	//	FTimerHandle RestartTimer;
 	//	GetWorldTimerManager().SetTimer(RestartTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
-
 	//}
-
-	// 接地判定
-	FVector Start = MeshComp->GetComponentLocation();
-	FVector End = Start - FVector(0, 0, GroundCheckDistance);
-
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Boostエフェクトの位置を更新
 	if (ActiveBoostEffect)
@@ -313,16 +334,6 @@ void AMyEgg::Tick(float DeltaTime)
 		MeshComp->SetPhysicsLinearVelocity(CurrentVelocity);
 	}
 
-	// 接地判定
-	if (bHit)
-	{
-		bIsGrounded = true;
-	}
-	else
-	{
-		bIsGrounded = false;
-	}
-
 	// 接地したら回転を停止
 	if (bIsGrounded)
 	{
@@ -333,11 +344,15 @@ void AMyEgg::Tick(float DeltaTime)
 void AMyEgg::RespawnPlayer()
 {
 	CurrentBoost = MaxBoost;
-
+	bIsFalling = false;
+	bIsGameOver = false;
+	bIsBoosting = false;
+	FallStartZ = 0.0f;
 	if (!RespawnPoint.IsZero())
 	{
 		SetActorLocation(RespawnPoint);
-		LandingHeight = GetActorLocation().Z;
+		//LandingHeight = GetActorLocation().Z;
+		FallStartZ = RespawnPoint.Z;
 	}
 	else
 	{
@@ -395,43 +410,21 @@ void AMyEgg::SetCheckpoint(const FVector& NewLocation)
 	RespawnPoint = NewLocation;
 }
 
-void AMyEgg::NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
-{
-	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-
-
-	// 上向きの面＝地面
-	if (HitNormal.Z > 0.7f)
-	{
-		bIsGrounded = true;
-
-		if (bIsFalling)
-		{
-			float LandZ = GetActorLocation().Z;
-			FallDistance = FallStartZ - LandZ;
-
-			UE_LOG(LogTemp, Warning, TEXT("FallDistance = %f"), FallDistance);
-
-			if (FallDistance >= 800.0f)
-			{
-				// ===== ゲームオーバー =====
-				RespawnPlayer();
-			}
-			else
-			{
-				// ===== セーフ：値をリセット =====
-				FallDistance = 0.0f;
-			}
-
-			bIsFalling = false;
-		}
-
-		// バウンド防止
-		FVector Vel = MeshComp->GetPhysicsLinearVelocity();
-		Vel.Z = 0.0f;
-		MeshComp->SetPhysicsLinearVelocity(Vel);
-	}
-}
+//void AMyEgg::NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
+//{
+//	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+//
+//	// 上向きの面＝地面
+//	if (HitNormal.Z > 0.7f)
+//	{
+//		bIsGrounded = true;
+//
+//		// バウンド防止
+//		FVector Vel = MeshComp->GetPhysicsLinearVelocity();
+//		Vel.Z = 0.0f;
+//		MeshComp->SetPhysicsLinearVelocity(Vel);
+//	}
+//}
 
 // Called to bind functionality to input
 void AMyEgg::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -459,6 +452,13 @@ void AMyEgg::OnGoalReached()
 	bIsGoalReached = true;
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
+	if (SpringArm)
+	{
+		SpringArm->bEnableCameraLag = false;
+		SpringArm->bEnableCameraRotationLag = false;
+		SpringArm->TargetArmLength = SpringArm->TargetArmLength; // 固定
+	}
+
 	//ClearUIを表示
 	if (ClearWidgetClass && ClearWidgetInstance == nullptr)
 	{
@@ -481,7 +481,7 @@ void AMyEgg::OnGoalReached()
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	
 	MeshComp->SetSimulatePhysics(false); // ← 完全停止！
-	SpringArm->bUsePawnControlRotation = false;
+
 }
 
 
@@ -589,6 +589,8 @@ void AMyEgg::BoostStop(const FInputActionValue& Value)
 	bIsBoosting = false;
 	bIsRising = false;
 	LandingHeight = GetActorLocation().Z;
+	FallStartZ = GetActorLocation().Z;
+	bIsFalling = true;
 	if (ActiveBoostEffect)
 	{
 		ActiveBoostEffect->DestroyComponent();
