@@ -192,6 +192,13 @@ void AMyEgg::Tick(float DeltaTime)
 	if (bIsGoalReached) return; // ← ゴール後は物理処理をスキップ
 	float CurrentZ = GetActorLocation().Z;
 
+	// 空中にいるかどうかの判定
+	if (!bIsGrounded && !bIsFalling)
+	{
+		bIsFalling = true;
+		FallStartZ = GetActorLocation().Z;
+	}
+	
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
 	{
@@ -255,26 +262,26 @@ void AMyEgg::Tick(float DeltaTime)
 		GetWorldTimerManager().SetTimer(RespawnTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
 	}
 	//通常のゲームオーバーの処理
-	if ((LandingHeight - CurrentZ >= 800.0f) && !bIsGrounded)
-	{
-		//UGameplayStatics::OpenLevel(GetWorld(), FName(*GetWorld()->GetName()));
+	//if ((LandingHeight - CurrentZ >= 800.0f) && !bIsGrounded)
+	//{
+	//	//UGameplayStatics::OpenLevel(GetWorld(), FName(*GetWorld()->GetName()));
 
-		//GameOverUIを表示
-		if (GameOverWidgetClass && GameOverWidgetInstance == nullptr)
-		{
-			GameOverWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
-			if (GameOverWidgetInstance)
-			{
-				GameOverWidgetInstance->AddToViewport();
-			}
-		}
-		// 入力を無効化
-		DisableInput(PC);
-		//  レベルリスタート
-		FTimerHandle RestartTimer;
-		GetWorldTimerManager().SetTimer(RestartTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
+	//	//GameOverUIを表示
+	//	if (GameOverWidgetClass && GameOverWidgetInstance == nullptr)
+	//	{
+	//		GameOverWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
+	//		if (GameOverWidgetInstance)
+	//		{
+	//			GameOverWidgetInstance->AddToViewport();
+	//		}
+	//	}
+	//	// 入力を無効化
+	//	DisableInput(PC);
+	//	//  レベルリスタート
+	//	FTimerHandle RestartTimer;
+	//	GetWorldTimerManager().SetTimer(RestartTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
 
-	}
+	//}
 
 	// 接地判定
 	FVector Start = MeshComp->GetComponentLocation();
@@ -284,7 +291,6 @@ void AMyEgg::Tick(float DeltaTime)
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
-
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Boostエフェクトの位置を更新
@@ -293,7 +299,11 @@ void AMyEgg::Tick(float DeltaTime)
 		ActiveBoostEffect->SetWorldLocation(MeshComp->GetComponentLocation() + BoostOffset);
 		ActiveBoostEffect->SetWorldRotation(FRotator::ZeroRotator); // 回転固定
 	}
-
+	if (ActiveSuperBoostEffect)
+	{
+		ActiveSuperBoostEffect->SetWorldLocation(MeshComp->GetComponentLocation() + BoostOffset);
+		ActiveSuperBoostEffect->SetWorldRotation(FRotator::ZeroRotator); // 回転固定
+	}
 	// Boost中なら上昇
 	if (bIsRising && MeshComp)
 	{
@@ -331,8 +341,13 @@ void AMyEgg::RespawnPlayer()
 	}
 	else
 	{
+		if (UMyGameInstance* GI = Cast<UMyGameInstance>(GetGameInstance()))
+		{
+			GI->ResetEggScore();
+		}
 		// チェックポイント未取得 → レベル再読込で確実に初期化
 		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+
 		return;
 	}
 
@@ -385,12 +400,31 @@ void AMyEgg::NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, c
 	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
 
 
-	// 接地判定：Z方向がほぼ上向きの面に接触した場合
-	if (HitNormal.Z > 0.01f)//0.7
+	// 上向きの面＝地面
+	if (HitNormal.Z > 0.7f)
 	{
-		bIsGrounded = true;   // 地面についている
-		//着地地点を記録
-		LandingHeight = GetActorLocation().Z;
+		bIsGrounded = true;
+
+		if (bIsFalling)
+		{
+			float LandZ = GetActorLocation().Z;
+			FallDistance = FallStartZ - LandZ;
+
+			UE_LOG(LogTemp, Warning, TEXT("FallDistance = %f"), FallDistance);
+
+			if (FallDistance >= 800.0f)
+			{
+				// ===== ゲームオーバー =====
+				RespawnPlayer();
+			}
+			else
+			{
+				// ===== セーフ：値をリセット =====
+				FallDistance = 0.0f;
+			}
+
+			bIsFalling = false;
+		}
 
 		// バウンド防止
 		FVector Vel = MeshComp->GetPhysicsLinearVelocity();
@@ -447,6 +481,7 @@ void AMyEgg::OnGoalReached()
 	MeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	
 	MeshComp->SetSimulatePhysics(false); // ← 完全停止！
+	SpringArm->bUsePawnControlRotation = false;
 }
 
 
@@ -537,7 +572,6 @@ void AMyEgg::BoostStart(const FInputActionValue& Value)
 	// エフェクト開始
 	if (BoostEffect && !ActiveBoostEffect)
 	{
-		// NiagaraをSpawn（アタッチせずにワールドに置く）
 		ActiveBoostEffect = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
 			BoostEffect,
@@ -573,6 +607,7 @@ void AMyEgg::SuperJump()
 	// 接地中のみ（空中連打防止）
 	if (!bIsGrounded)
 		return;
+	if (!SuperBoostEffect) return;
 
 	float Cost = MaxBoost * SuperJumpCostRatio;
 
@@ -596,6 +631,37 @@ void AMyEgg::SuperJump()
 	{
 		MyWidgetInstance->UpdateBoostBar(CurrentBoost, MaxBoost);
 	}
+
+	// エフェクト開始
+	UNiagaraComponent* SuperBoostComp =UNiagaraFunctionLibrary::SpawnSystemAttached
+	(
+		SuperBoostEffect,
+		MeshComp,
+		NAME_None,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		EAttachLocation::SnapToTarget,
+		false   // AutoDestroy は false
+	);
+
+	if (SuperBoostComp)
+	{
+		// 1秒後に消す
+		FTimerHandle Timer;
+		GetWorld()->GetTimerManager().SetTimer(
+			Timer,
+			[SuperBoostComp]()
+			{
+				if (SuperBoostComp)
+				{
+					SuperBoostComp->DestroyComponent();
+				}
+			},
+			1.0f,
+			false
+		);
+	}
+
 }
 
 void AMyEgg::Tab()

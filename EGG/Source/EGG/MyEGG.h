@@ -64,6 +64,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn")
 	float RespawnDelay = 2.0f;
 
+	//ウィジット
 	UPROPERTY()
 	UUserWidget* GameOverWidgetInstance = nullptr;
 
@@ -76,16 +77,17 @@ public:
 	UPROPERTY()
 	class UScoreWidget* ScoreWidget;
 
-	// Boost量
+	// Boost
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxBoost = 100.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float CurrentBoost = MaxBoost;
-		//FMath::Clamp(CurrentBoost, 0.0f, MaxBoost);
+
 	//1秒に使うエネルギー
 	UPROPERTY(EditAnywhere)
 	float BoostConsumeRate = 20.0f;
+
 	//1秒で回復する量
 	UPROPERTY(EditAnywhere)
 	float BoostRecoverRate = 20.0f;
@@ -97,6 +99,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "SuperJump")
 	float SuperJumpForce = 100000.0f;  // 上方向の力（調整用）
 
+	// ウィジットクラス
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UMyWidget> WidgetClass;
 
@@ -105,9 +108,11 @@ public:
 
 	UMyWidget* BoostWidget;
 
+	// クリアしたときに出すドラゴン
 	UPROPERTY(EditAnywhere, Category = "Clear")
 	ADoragonActor* DoragonActor;
 private:
+	//コンポーネント
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComp;
 
@@ -117,14 +122,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Physics")
 	UPhysicalMaterial* PhysicsMaterial;
 
-	/** カメラ関係 */
+	// カメラ
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* SpringArm;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* Camera;
 
-	/** 入力関連 */
+	//入力
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* DefaultMappingContext;
 
@@ -146,9 +151,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* TabAction;
 
+	// 地面判定用
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float GroundCheckDistance = 50.0f; // 足元からのチェック距離
 
+	// UI ウィジットクラス
 	UPROPERTY(EditAnywhere,Category = "UI")
 	TSubclassOf<UUserWidget> CooldownWidgetClass;
 
@@ -167,14 +174,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> ScoreWidgetClass;
 
-	
-
+	// ウィジットインスタンス
 	UPROPERTY()
 	UMyWidget* MyWidgetInstance;
 
 	UPROPERTY()
 	UUserWidget* BoostGaugeWidget;
 
+	// Boostゲージ
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* BoostBar;
 
@@ -194,9 +201,15 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	UNiagaraSystem* BoostEffect;
 
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UNiagaraSystem* SuperBoostEffect;
+
 	/** 再生中の Niagara Component */
 	UPROPERTY()
 	UNiagaraComponent* ActiveBoostEffect = nullptr;
+
+	UPROPERTY()
+	UNiagaraComponent* ActiveSuperBoostEffect = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Boost|Sound")
 	USoundBase* BoostSound;
@@ -208,27 +221,27 @@ private:
 	float LandingHeight = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Fall")
-	float FallDistance = 1000.0f;   // 300落ちたらリスタート
+	float FallDistance = 800.0f;   // 300落ちたらリスタート
 
 	UPROPERTY(VisibleAnywhere, Category = "Egg")
 	int32 EggCount = 0;
 
 	UPROPERTY(EditAnywhere, Category = "Egg")
 	int32 MaxEggCount = 3;
-
+	
 	// リスポーン処理
 	UFUNCTION()
 	void RespawnPlayer();
-
+	// Boost 処理
 	UFUNCTION()
 	void BoostStart(const FInputActionValue& Value);
-
+	// Boost 停止処理
 	UFUNCTION()
 	void BoostStop(const FInputActionValue& Value);
-
+	// SuperBoost
 	UFUNCTION()
 	void SuperJump();
-
+	// メニュー
 	UFUNCTION()
 	void Tab();
 
@@ -281,6 +294,12 @@ private:
 	/** 空中での操作の強さ（0.0〜1.0） */
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float AirControlFactor = 0.7f;
+
+	// 落下開始時の高さ
+	float FallStartZ = 0.0f;
+
+	// 落下中かどうか
+	bool bIsFalling = false;
 
 	APawn* Player;
 
