@@ -40,7 +40,7 @@ protected:
     FVector MoveOffset = FVector(800.f, 0.f, 0.f);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
-    float MoveSpeed = 200.f;
+    float MoveSpeed = 100.f;
 
 private:
     FVector StartLocation;

@@ -145,6 +145,17 @@ void AMyEgg::BeginPlay()
 		BoostAudioComponent->RegisterComponent();
 	}
 
+
+	if (SuperBoostSound)
+	{
+		SuperBoostAudioComponent = NewObject<UAudioComponent>(this);
+		SuperBoostAudioComponent->SetupAttachment(RootComponent);
+		SuperBoostAudioComponent->SetSound(SuperBoostSound);
+		SuperBoostAudioComponent->bAutoActivate = false; // 自動再生 OFF
+		SuperBoostAudioComponent->bIsUISound = false;
+		SuperBoostAudioComponent->RegisterComponent();
+	}
+
 	if (PlayerMesh)
 	{
 		MeshComp->SetStaticMesh(PlayerMesh);
@@ -293,27 +304,6 @@ void AMyEgg::Tick(float DeltaTime)
 		BoostBar->SetPercent(CurrentBoost / MaxBoost);
 	}
 
-	//通常のゲームオーバーの処理
-	//if ((LandingHeight - CurrentZ >= 800.0f) && !bIsGrounded)
-	//{
-	//	//UGameplayStatics::OpenLevel(GetWorld(), FName(*GetWorld()->GetName()));
-
-	//	//GameOverUIを表示
-	//	if (GameOverWidgetClass && GameOverWidgetInstance == nullptr)
-	//	{
-	//		GameOverWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
-	//		if (GameOverWidgetInstance)
-	//		{
-	//			GameOverWidgetInstance->AddToViewport();
-	//		}
-	//	}
-	//	// 入力を無効化
-	//	DisableInput(PC);
-	//	//  レベルリスタート
-	//	FTimerHandle RestartTimer;
-	//	GetWorldTimerManager().SetTimer(RestartTimer, this, &AMyEgg::RespawnPlayer, RespawnDelay, false);
-	//}
-
 	// Boostエフェクトの位置を更新
 	if (ActiveBoostEffect)
 	{
@@ -409,22 +399,6 @@ void AMyEgg::SetCheckpoint(const FVector& NewLocation)
 {
 	RespawnPoint = NewLocation;
 }
-
-//void AMyEgg::NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
-//{
-//	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-//
-//	// 上向きの面＝地面
-//	if (HitNormal.Z > 0.7f)
-//	{
-//		bIsGrounded = true;
-//
-//		// バウンド防止
-//		FVector Vel = MeshComp->GetPhysicsLinearVelocity();
-//		Vel.Z = 0.0f;
-//		MeshComp->SetPhysicsLinearVelocity(Vel);
-//	}
-//}
 
 // Called to bind functionality to input
 void AMyEgg::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -632,6 +606,24 @@ void AMyEgg::SuperJump()
 	if (MyWidgetInstance)
 	{
 		MyWidgetInstance->UpdateBoostBar(CurrentBoost, MaxBoost);
+	}
+	// サウンド再生
+	if (SuperBoostAudioComponent && !SuperBoostAudioComponent->IsPlaying())
+	{
+		SuperBoostAudioComponent->Play();
+		FTimerHandle Timer;
+		GetWorld()->GetTimerManager().SetTimer(
+			Timer,
+			[this]()
+			{
+				if (SuperBoostAudioComponent)
+				{
+					SuperBoostAudioComponent->Stop();
+				}
+			},
+			0.6f,
+			false
+		);
 	}
 
 	// エフェクト開始

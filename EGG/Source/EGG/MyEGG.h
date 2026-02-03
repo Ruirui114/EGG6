@@ -217,6 +217,12 @@ private:
 	UPROPERTY()
 	UAudioComponent* BoostAudioComponent;
 
+	UPROPERTY(EditAnywhere, Category = "SuperBoost|Sound")
+	USoundBase* SuperBoostSound;
+
+	UPROPERTY()
+	UAudioComponent* SuperBoostAudioComponent;
+
 	UPROPERTY()
 	float LandingHeight = 0.0f;
 
